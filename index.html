@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Betting App</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .admin-section, .user-section { margin-bottom: 30px; }
+    .hidden { display: none; }
+    .match { border: 1px solid #ccc; padding: 10px; margin-top: 10px; }
+    .balance { font-weight: bold; margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+
+<h2>Betting Platform</h2>
+<div class="balance">Balance: <span id="balance">0</span> টাকা</div>
+
+<div class="user-section">
+  <h3>Place a Bet</h3>
+  <input type="text" id="betMatch" placeholder="Match Name">
+  <input type="text" id="betTeam" placeholder="Team">
+  <input type="number" id="betAmount" placeholder="Amount">
+  <button onclick="placeBet()">Bet</button>
+</div>
+
+<div class="user-section">
+  <h3>Deposit</h3>
+  <p>Send Money to: <b>01816395401</b> (bKash/Nagad)</p>
+  <input type="number" id="depositAmount" placeholder="Amount">
+  <input type="text" id="transactionId" placeholder="Transaction ID">
+  <button onclick="makeDeposit()">Submit Deposit</button>
+</div>
+
+<div class="admin-access">
+  <p><a href="#" onclick="enterAdmin()">RR</a></p>
+</div>
+
+<div class="admin-section hidden" id="adminPanel">
+  <h3>Admin Panel</h3>
+  <input type="text" id="matchName" placeholder="Match Name">
+  <input type="text" id="team1" placeholder="Team 1">
+  <input type="text" id="team2" placeholder="Team 2">
+  <input type="number" id="winRateInput" placeholder="Bet Amount">
+  <input type="number" id="winReturnInput" placeholder="Return Amount if Win">
+  <button onclick="addMatch()">Add Match</button>
+
+  <h4>Match History</h4>
+  <div id="matchHistory"></div>
+</div>
+
+<script>
+let matches = [], balance = 0, bets = [], password = "rezoan";
+
+function updateBalance() {
+  document.getElementById('balance').textContent = balance;
+}
+
+function makeDeposit() {
+  const amount = parseInt(document.getElementById('depositAmount').value);
+  const txid = document.getElementById('transactionId').value;
+  if (amount && txid) {
+    balance += amount;
+    updateBalance();
+    alert("Deposit Successful");
+  } else {
+    alert("Please fill all fields");
+  }
+}
+
+function placeBet() {
+  const match = document.getElementById('betMatch').value;
+  const team = document.getElementById('betTeam').value;
+  const amount = parseInt(document.getElementById('betAmount').value);
+  if (match && team && amount && amount <= balance) {
+    balance -= amount;
+    updateBalance();
+    bets.push({ match, team, amount });
+    alert("Bet placed on " + team + " in " + match);
+  } else {
+    alert("Invalid bet or insufficient balance");
+  }
+}
+
+function enterAdmin() {
+  const pass = prompt("Enter admin password:");
+  if (pass === password) {
+    document.getElementById('adminPanel').classList.remove('hidden');
+  } else {
+    alert("Wrong password");
+  }
+}
+
+function addMatch() {
+  const match = document.getElementById('matchName').value;
+  const team1 = document.getElementById('team1').value;
+  const team2 = document.getElementById('team2').value;
+  const rate = parseFloat(document.getElementById('winRateInput').value);
+  const returnAmount = parseFloat(document.getElementById('winReturnInput').value);
+  if (match && team1 && team2 && rate && returnAmount) {
+    matches.push({ match, team1, team2, rate, returnAmount });
+    displayMatches();
+    alert("Match added successfully");
+  }
+}
+
+function displayMatches() {
+  const container = document.getElementById('matchHistory');
+  container.innerHTML = "";
+  matches.forEach((m, i) => {
+    const div = document.createElement('div');
+    div.className = "match";
+    div.innerHTML = `<b>${m.match}</b><br>${m.team1} vs ${m.team2}<br>
+      Rate: ${m.rate} → Return: ${m.returnAmount}<br>
+      <button onclick="declareResult(${i}, '${m.team1}')">${m.team1} Win</button>
+      <button onclick="declareResult(${i}, '${m.team2}')">${m.team2} Win</button>`;
+    container.appendChild(div);
+  });
+}
+
+function declareResult(index, winner) {
+  const matchName = matches[index].match;
+  const payout = matches[index].returnAmount;
+  bets.forEach(bet => {
+    if (bet.match === matchName) {
+      if (bet.team === winner) {
+        balance += payout;
+        alert(`User won! +${payout}`);
+      } else {
+        alert(`User lost! -${bet.amount}`);
+      }
+    }
+  });
+  updateBalance();
+}
+</script>
+
+</body>
+</html>
